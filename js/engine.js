@@ -430,8 +430,27 @@
     return out;
   }
 
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function noteText(flipNote, aName, noteA, bName, noteB) {
+    const parts = [];
+    if (flipNote && flipNote.length) parts.push(flipNote.join(" · "));
+    if (noteA) parts.push(aName + ": " + noteA);
+    if (noteB) parts.push(bName + ": " + noteB);
+    return parts.join(" ");
+  }
+
   const IPD = {
     PAYOFFS: PAYOFFS,
+    escapeHtml: escapeHtml,
+    noteText: noteText,
     hash32: hash32,
     seedFrom: seedFrom,
     seedPair: seedPair,

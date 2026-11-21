@@ -9,6 +9,28 @@
 
   const DEFAULT_URL = "http://127.0.0.1:11434";
 
+  /**
+   * Allow only http(s) URLs whose host is localhost, 127.0.0.1, or ::1.
+   * Returns the origin (scheme + host + port), with no trailing slash.
+   */
+  function assertLocalBaseUrl(baseUrl) {
+    const raw = baseUrl == null || baseUrl === "" ? DEFAULT_URL : String(baseUrl);
+    var parsed;
+    try {
+      parsed = new URL(raw);
+    } catch (err) {
+      throw new Error("Ollama URL must be a local http(s) address");
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new Error("Ollama URL must use http or https");
+    }
+    const host = String(parsed.hostname || "").replace(/^\[/, "").replace(/\]$/, "").toLowerCase();
+    if (host !== "localhost" && host !== "127.0.0.1" && host !== "::1") {
+      throw new Error("Ollama URL must be localhost, 127.0.0.1, or ::1");
+    }
+    return parsed.origin;
+  }
+
   function parseMove(text) {
     const raw = String(text || "");
     const first = raw.trim().charAt(0).toUpperCase();
@@ -35,8 +57,10 @@
     baseUrl: DEFAULT_URL,
     enabled: false,
 
+    assertLocalBaseUrl: assertLocalBaseUrl,
+
     listModels: async function (baseUrl) {
-      const url = (baseUrl || DEFAULT_URL).replace(/\/$/, "") + "/api/tags";
+      const url = assertLocalBaseUrl(baseUrl) + "/api/tags";
       const res = await fetch(url, { method: "GET" });
       if (!res.ok) throw new Error("Ollama returned " + res.status);
       const data = await res.json();
@@ -47,7 +71,7 @@
     },
 
     createStrategy: function (model, baseUrl) {
-      const host = (baseUrl || DEFAULT_URL).replace(/\/$/, "");
+      const host = assertLocalBaseUrl(baseUrl);
       const modelName = model;
       return {
         id: "ollama",

@@ -326,7 +326,7 @@
           " · payoff " + match.scoresA[i] + " / " + match.scoresB[i] +
         "</div>" +
         (flipNote.length || noteA || noteB
-          ? '<div class="note" style="flex-basis:100%">' + (flipNote.join(" · ") || "") + (noteA ? " " + aName + ": " + noteA : "") + (noteB ? " " + bName + ": " + noteB : "") + "</div>"
+          ? '<div class="note" style="flex-basis:100%"></div>'
           : "") +
       "</div>" +
       '<div class="tape"><div class="tape-label"><span>' + aName + "</span><span>White dot = noise flip · gold edge = echo</span></div>" +
@@ -340,6 +340,11 @@
         '<button type="button" class="btn" data-act="next" data-kind="' + kind + '">Next</button>' +
       "</div>" +
       (callout ? '<div class="callout">' + callout + "</div>" : "");
+
+    const noteEl = container.querySelector(".note");
+    if (noteEl) {
+      noteEl.textContent = IPD.noteText(flipNote, aName, noteA, bName, noteB);
+    }
   }
 
   function setMatchCursor(i) {
@@ -449,7 +454,7 @@
       '<div class="stat"><b>' + formatNum(result.totalA) + " / " + formatNum(result.totalB) + "</b><span>Scores</span></div>" +
       '<div class="stat"><b>' + mutual + "</b><span>Mutual C rounds</span></div>" +
       '<div class="stat"><b>' + flips + "</b><span>Noise flips</span></div>" +
-      '<div class="stat"><b>' + (result.echo ? result.echo.length + " r" : "None") + "</b><span>Longest echo</span></div>";
+      '<div class="stat"><b>' + (result.echo ? result.echo.length + (result.echo.length === 1 ? " round" : " rounds") : "None") + "</b><span>Longest echo</span></div>";
     const startAt = result.echo ? result.echo.start : 0;
     setNoiseCursor(startAt);
   }
