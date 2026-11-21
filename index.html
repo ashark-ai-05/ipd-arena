@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IPD Arena — Iterated Prisoner's Dilemma</title>
+  <meta name="description" content="A visual lab for the iterated prisoner's dilemma: tournaments, match tapes, noise, and the evolution of cooperation." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%230c0d10' width='32' height='32' rx='6'/%3E%3Crect x='5' y='10' width='10' height='10' rx='2' fill='%235ec2a8'/%3E%3Crect x='17' y='10' width='10' height='10' rx='2' fill='%23e56a55'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="masthead">
+      <div class="brand">
+        <div class="wordmark">IPD <em>Arena</em></div>
+        <div class="tagline">Iterated Prisoner's Dilemma</div>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Views">
+        <button type="button" role="tab" id="tab-tournament" data-view="tournament" aria-selected="true">Tournament</button>
+        <button type="button" role="tab" id="tab-match" data-view="match" aria-selected="false">Match tape</button>
+        <button type="button" role="tab" id="tab-noise" data-view="noise" aria-selected="false">Noise lab</button>
+        <button type="button" role="tab" id="tab-ecology" data-view="ecology" aria-selected="false">Ecology</button>
+      </nav>
+      <div class="mast-controls">
+        <label class="field">Seed
+          <input id="seed" type="number" inputmode="numeric" value="42" min="1" step="1" />
+        </label>
+        <button type="button" class="btn btn-gold" id="btn-demo">Play demo</button>
+        <button type="button" class="btn" id="btn-about">About</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section class="view is-on" id="view-tournament" role="tabpanel" aria-labelledby="tab-tournament">
+        <div class="toolbar">
+          <label class="field">Rounds
+            <input id="rounds" type="number" value="200" min="1" max="2000" />
+          </label>
+          <label class="field">Noise
+            <input id="tourney-noise" type="number" value="0" min="0" max="1" step="0.01" />
+          </label>
+          <button type="button" class="btn btn-gold" id="btn-run-tourney">Run tournament</button>
+          <button type="button" class="btn" id="btn-skip-tourney" disabled>Skip animation</button>
+          <p class="hint" id="tourney-hint">Round-robin including self-play. Same seed, same result.</p>
+        </div>
+        <div class="tourney-grid">
+          <div class="panel board" id="leaderboard">
+            <div class="board-head">
+              <h2>Leaderboard</h2>
+              <span class="kicker" id="tourney-status">Ready</span>
+            </div>
+            <div id="leaderboard-rows"></div>
+          </div>
+          <div class="panel matrix-wrap">
+            <div class="panel-head">
+              <h2>Pairwise scores</h2>
+              <span class="kicker">Click a cell to open the tape</span>
+            </div>
+            <div id="matrix"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-match" role="tabpanel" aria-labelledby="tab-match" hidden>
+        <div class="split">
+          <aside class="panel side">
+            <p class="kicker">Players</p>
+            <label class="field" style="margin-top:10px;text-transform:none;letter-spacing:0;">Player A
+              <select class="pick" id="match-a"></select>
+            </label>
+            <label class="field" style="text-transform:none;letter-spacing:0;">Player B
+              <select class="pick" id="match-b"></select>
+            </label>
+            <label class="field">Noise
+              <input id="match-noise" type="number" value="0" min="0" max="1" step="0.01" />
+            </label>
+            <label class="field" style="margin-top:10px;">Rounds
+              <input id="match-rounds" type="number" value="200" min="1" max="500" />
+            </label>
+            <button type="button" class="btn btn-gold" id="btn-run-match" style="margin-top:16px;width:100%;">Play match</button>
+            <p class="hint" id="match-blurb" style="margin-top:16px;"></p>
+            <label class="switch" style="margin-top:18px;">
+              <input type="checkbox" id="ollama-on" />
+              Use local model (Ollama)
+            </label>
+            <p class="hint" id="ollama-status">Off. No network requests are made until you enable this. Requires Ollama at 127.0.0.1:11434. Tournament and ecology stay model-free.</p>
+            <select class="pick" id="ollama-model" hidden></select>
+          </aside>
+          <div class="panel main-panel" id="match-stage">
+            <p class="hint">Pick two strategies and press Play match, or click a cell in the tournament matrix.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-noise" role="tabpanel" aria-labelledby="tab-noise" hidden>
+        <div class="split">
+          <aside class="panel side">
+            <p class="kicker">Signal error</p>
+            <h2 style="font-family:var(--serif);font-weight:400;margin:8px 0 4px;font-size:24px;">Noise lab</h2>
+            <p class="hint">Two Tit-for-Tat players (or Generous TFT, when generosity is above zero) under misread moves.</p>
+            <div class="slider-row">
+              <header>Noise <span id="noise-val">5%</span></header>
+              <input type="range" id="noise-slider" min="0" max="20" step="1" value="5" />
+            </div>
+            <div class="slider-row">
+              <header>Generosity <span id="gen-val">0%</span></header>
+              <input type="range" id="gen-slider" min="0" max="30" step="1" value="0" />
+            </div>
+            <button type="button" class="btn btn-gold" id="btn-run-noise" style="width:100%;">Run</button>
+            <div class="stat-grid" id="noise-stats"></div>
+          </aside>
+          <div class="panel main-panel" id="noise-stage">
+            <p class="hint">Set noise, leave generosity at 0, and run. Then raise generosity and run again.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-ecology" role="tabpanel" aria-labelledby="tab-ecology" hidden>
+        <div class="toolbar">
+          <label class="field">Generations
+            <input id="generations" type="number" value="200" min="10" max="2000" />
+          </label>
+          <button type="button" class="btn btn-gold" id="btn-run-ecology">Run ecology</button>
+          <p class="hint">Shares start equal. Each generation, a strategy’s share is proportional to its share times its payoff against the current mix.</p>
+        </div>
+        <div class="panel chart-wrap">
+          <div class="panel-head">
+            <h2>Population shares</h2>
+            <span class="kicker" id="eco-status">Ready</span>
+          </div>
+          <svg class="chart" id="eco-chart" viewBox="0 0 900 360" preserveAspectRatio="none" role="img" aria-label="Stacked population shares over generations"></svg>
+          <div class="legend" id="eco-legend"></div>
+        </div>
+      </section>
+    </main>
+
+    <p class="footer-note">
+      Payoffs T=5 R=3 P=1 S=0 · Offline, seeded, no API keys.
+      Inspired by <a href="https://youtu.be/mScpHTIi-kM">Veritasium’s game-theory video</a>.
+      Scientific record: Axelrod 1980.
+    </p>
+  </div>
+
+  <div class="modal-back" id="about" hidden>
+    <div class="modal" role="dialog" aria-labelledby="about-title">
+      <h2 id="about-title">A lab for cooperation</h2>
+      <p>
+        In a one-shot prisoner’s dilemma, defection is the rational move. When the same players meet again and again, that changes.
+        This app is a visual workbench for that repeated game: tournaments, inspectable match tapes, noisy observations, and ecological succession.
+      </p>
+      <p>
+        It illustrates findings from Robert Axelrod’s 1980 tournaments — that successful strategies tended to be nice, forgiving, retaliatory, and clear — and that there is no single best rule. The best play depends on the field. Noise can turn Tit for Tat against itself; a little extra forgiveness can break the spiral. This is a demonstration, not a claim of new science, and it makes no claims about markets or returns.
+      </p>
+      <div class="payoff-legend">
+        <span>CC → 3, 3</span>
+        <span>DC → 5, 0</span>
+        <span>CD → 0, 5</span>
+        <span>DD → 1, 1</span>
+      </div>
+      <p>
+        Optional local-model play talks only to Ollama on your machine, is off by default, and is never used in the tournament or ecology views.
+      </p>
+      <p>
+        Inspired by <a href="https://youtu.be/mScpHTIi-kM">Once you understand game theory, you understand the world</a> (Veritasium).
+      </p>
+      <button type="button" class="btn btn-gold" id="btn-about-close">Close</button>
+    </div>
+  </div>
+
+  <script src="js/engine.js"></script>
+  <script src="js/strategies.js"></script>
+  <script src="js/ollama.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
