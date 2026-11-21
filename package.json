@@ -1,0 +1,10 @@
+{
+  "name": "ipd-arena",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Visual lab for the iterated prisoner's dilemma.",
+  "scripts": {
+    "start": "python3 -m http.server 8765",
+    "test": "node --test test/*.test.js"
+  }
+}
